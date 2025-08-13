@@ -17,34 +17,56 @@ An MCP (Model Context Protocol) Server for controlling Fibaro Home Center 3 thro
 
 ## Installation
 
-1. Clone or download this project
-2. Install dependencies:
+### 🚀 Quick Installation (Recommended)
 
+**One-command installation** - no need to clone the repository:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/kaeljune/fibaro-mcp-server/main/quick-install.sh | bash
+```
+
+This script will:
+- ✅ Check dependencies (git, node.js, npm)
+- ✅ Choose your AI client (Claude Desktop or Cursor)
+- ✅ Automatically clone the repository
+- ✅ Ask for Fibaro HC3 connection details
+- ✅ Test the connection
+- ✅ Install dependencies and build the project
+- ✅ Configure your AI client automatically
+- ✅ Ready to use!
+
+### 📋 Manual Installation
+
+If you prefer to install manually:
+
+1. Clone this repository:
+```bash
+git clone https://github.com/kaeljune/fibaro-mcp-server.git
+cd fibaro-mcp-server
+```
+
+2. Install dependencies:
 ```bash
 npm install
 ```
 
 3. Build the project:
-
 ```bash
 npm run build
 ```
 
-4. **Run the automatic installation script:**
-
+4. Run the configuration script:
 ```bash
 ./install-claude.sh
 ```
 
-The script will:
-- Ask for Fibaro HC3 connection details (IP, username, password)
-- Test the connection to ensure credentials are correct
-- Automatically configure Claude Desktop
-- Securely save login credentials in MCP configuration
-
 ## Usage
 
-After installation, **no manual connection required**. The MCP server will automatically connect to Fibaro HC3 when Claude starts.
+After installation, **no manual connection required**. The MCP server will automatically connect to Fibaro HC3 when your AI client (Claude Desktop or Cursor) starts.
+
+### Supported AI Clients
+- **Claude Desktop** - Full MCP support
+- **Cursor** - MCP integration for AI-powered coding
 
 ### 1. View Device List
 
