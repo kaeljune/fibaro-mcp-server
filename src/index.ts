@@ -7,6 +7,9 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { FibaroClient, FibaroConfig } from './fibaro-client.js';
+import { HiagiClient, HiagiConfig, JobHelpers } from './hiagi-client.js';
+import { ContextProcessor, DeviceIntent } from './context-processor.js';
+import { DeviceType, getDeviceTypeName } from './device-types.js';
 
 // Helper function to convert color names to RGB values
 function getColorRGB(colorName: string): { r: number; g: number; b: number } {
@@ -43,12 +46,14 @@ function getColorRGB(colorName: string): { r: number; g: number; b: number } {
 class FibaroMCPServer {
   private server: Server;
   private fibaroClient: FibaroClient | null = null;
+  private hiagiClient: HiagiClient | null = null;
+  private contextProcessor: ContextProcessor;
 
   constructor() {
     this.server = new Server(
       {
         name: 'fibaro-hc3-server',
-        version: '1.0.0',
+        version: '2.0.0',
       },
       {
         capabilities: {
@@ -57,9 +62,11 @@ class FibaroMCPServer {
       }
     );
 
+    this.contextProcessor = new ContextProcessor();
     this.setupToolHandlers();
     this.setupErrorHandling();
     this.initializeFibaroClient();
+    this.initializeHiagiClient();
   }
 
   private async initializeFibaroClient(): Promise<void> {
@@ -84,6 +91,26 @@ class FibaroMCPServer {
         const isConnected = await this.fibaroClient.testConnection();
         if (isConnected) {
           console.error(`✅ Connected to Fibaro HC3 at ${protocol}://${host}:${port}`);
+          
+          // Load devices and rooms for context processor
+          try {
+            const [devices, rooms] = await Promise.all([
+              this.fibaroClient.getDevices(),
+              this.fibaroClient.getRooms()
+            ]);
+            
+            const roomMap = rooms.reduce((map, room) => {
+              map[room.id] = room.name;
+              return map;
+            }, {} as Record<number, string>);
+            
+            this.contextProcessor.updateDevices(devices);
+            this.contextProcessor.updateRooms(roomMap);
+            
+            console.error(`📊 Loaded ${devices.length} devices and ${rooms.length} rooms for context processing`);
+          } catch (error) {
+            console.error(`⚠️ Failed to load devices for context processing: ${error}`);
+          }
         } else {
           console.error(`❌ Failed to connect to Fibaro HC3 at ${protocol}://${host}:${port}`);
           this.fibaroClient = null;
@@ -94,6 +121,35 @@ class FibaroMCPServer {
       }
     } else {
       console.error('❌ Fibaro HC3 configuration not found in environment variables');
+    }
+  }
+
+  private async initializeHiagiClient(): Promise<void> {
+    const apiKey = process.env.HIAGI_API_KEY;
+    const baseUrl = process.env.HIAGI_BASE_URL;
+
+    if (apiKey) {
+      const config: HiagiConfig = {
+        apiKey,
+        baseUrl
+      };
+
+      this.hiagiClient = new HiagiClient(config);
+      
+      try {
+        const isConnected = await this.hiagiClient.testConnection();
+        if (isConnected) {
+          console.error(`✅ Connected to Hiagi.ai background job service`);
+        } else {
+          console.error(`❌ Failed to connect to Hiagi.ai service`);
+          this.hiagiClient = null;
+        }
+      } catch (error) {
+        console.error(`❌ Error connecting to Hiagi.ai: ${error}`);
+        this.hiagiClient = null;
+      }
+    } else {
+      console.error('ℹ️ Hiagi.ai API key not provided - background jobs disabled');
     }
   }
 

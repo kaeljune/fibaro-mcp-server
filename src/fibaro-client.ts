@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import * as https from 'https';
+import { DeviceType, detectDeviceType, getDeviceCapabilities, canDevicePerformAction } from './device-types.js';
 
 export interface FibaroConfig {
   host: string;
@@ -13,10 +14,14 @@ export interface Device {
   id: number;
   name: string;
   type: string;
+  baseType?: string;
   roomID: number;
   enabled: boolean;
   visible: boolean;
   properties: Record<string, any>;
+  interfaces?: string[];
+  deviceType?: DeviceType;
+  capabilities?: any;
 }
 
 export interface Scene {
@@ -69,7 +74,19 @@ export class FibaroClient {
   async getDevices(): Promise<Device[]> {
     try {
       const response = await this.client.get('/api/devices');
-      return response.data;
+      const devices = response.data;
+      
+      // Enhance devices with type detection and capabilities
+      return devices.map((device: any) => {
+        const deviceType = detectDeviceType(device);
+        const capabilities = getDeviceCapabilities(deviceType);
+        
+        return {
+          ...device,
+          deviceType,
+          capabilities
+        };
+      });
     } catch (error) {
       throw new Error(`Failed to get devices: ${error}`);
     }
@@ -158,6 +175,171 @@ export class FibaroClient {
       });
     } catch (error) {
       throw new Error(`Failed to set color for device ${id} to RGB(${red},${green},${blue},${white}): ${error}`);
+    }
+  }
+
+  // Roller Shutter / Blinds Control
+  async openCover(id: number): Promise<void> {
+    try {
+      await this.client.post(`/api/devices/${id}/action/open`, {
+        args: []
+      });
+    } catch (error) {
+      throw new Error(`Failed to open cover ${id}: ${error}`);
+    }
+  }
+
+  async closeCover(id: number): Promise<void> {
+    try {
+      await this.client.post(`/api/devices/${id}/action/close`, {
+        args: []
+      });
+    } catch (error) {
+      throw new Error(`Failed to close cover ${id}: ${error}`);
+    }
+  }
+
+  async stopCover(id: number): Promise<void> {
+    try {
+      await this.client.post(`/api/devices/${id}/action/stop`, {
+        args: []
+      });
+    } catch (error) {
+      throw new Error(`Failed to stop cover ${id}: ${error}`);
+    }
+  }
+
+  async setCoverPosition(id: number, position: number): Promise<void> {
+    try {
+      await this.client.post(`/api/devices/${id}/action/setValue`, {
+        args: [position]
+      });
+    } catch (error) {
+      throw new Error(`Failed to set cover ${id} position to ${position}: ${error}`);
+    }
+  }
+
+  async setSlatPosition(id: number, angle: number): Promise<void> {
+    try {
+      await this.client.post(`/api/devices/${id}/action/setSlat`, {
+        args: [angle]
+      });
+    } catch (error) {
+      throw new Error(`Failed to set slat angle for device ${id} to ${angle}: ${error}`);
+    }
+  }
+
+  // Thermostat Control
+  async setTargetTemperature(id: number, temperature: number): Promise<void> {
+    try {
+      await this.client.post(`/api/devices/${id}/action/setTargetLevel`, {
+        args: [temperature]
+      });
+    } catch (error) {
+      throw new Error(`Failed to set target temperature for device ${id} to ${temperature}: ${error}`);
+    }
+  }
+
+  async setThermostatMode(id: number, mode: string): Promise<void> {
+    try {
+      await this.client.post(`/api/devices/${id}/action/setMode`, {
+        args: [mode]
+      });
+    } catch (error) {
+      throw new Error(`Failed to set thermostat mode for device ${id} to ${mode}: ${error}`);
+    }
+  }
+
+  // Lock Control
+  async secureLock(id: number): Promise<void> {
+    try {
+      await this.client.post(`/api/devices/${id}/action/secure`, {
+        args: []
+      });
+    } catch (error) {
+      throw new Error(`Failed to secure lock ${id}: ${error}`);
+    }
+  }
+
+  async unsecureLock(id: number): Promise<void> {
+    try {
+      await this.client.post(`/api/devices/${id}/action/unsecure`, {
+        args: []
+      });
+    } catch (error) {
+      throw new Error(`Failed to unsecure lock ${id}: ${error}`);
+    }
+  }
+
+  // Generic device control with validation
+  async controlDevice(id: number, action: string, args: any[] = []): Promise<void> {
+    try {
+      // Get device info to validate action
+      const device = await this.getDevice(id);
+      const deviceType = device.deviceType || detectDeviceType(device);
+      
+      if (!canDevicePerformAction(deviceType, action)) {
+        throw new Error(`Device ${id} (${deviceType}) does not support action: ${action}`);
+      }
+
+      await this.client.post(`/api/devices/${id}/action/${action}`, {
+        args
+      });
+    } catch (error) {
+      throw new Error(`Failed to control device ${id} with action ${action}: ${error}`);
+    }
+  }
+
+  // Advanced device queries
+  async getDevicesByType(deviceType: DeviceType): Promise<Device[]> {
+    try {
+      const allDevices = await this.getDevices();
+      return allDevices.filter(device => device.deviceType === deviceType);
+    } catch (error) {
+      throw new Error(`Failed to get devices by type ${deviceType}: ${error}`);
+    }
+  }
+
+  async getDevicesByRoom(roomId: number): Promise<Device[]> {
+    try {
+      const allDevices = await this.getDevices();
+      return allDevices.filter(device => device.roomID === roomId);
+    } catch (error) {
+      throw new Error(`Failed to get devices by room ${roomId}: ${error}`);
+    }
+  }
+
+  async getDevicesByCapability(capability: keyof import('./device-types.js').DeviceCapabilities): Promise<Device[]> {
+    try {
+      const allDevices = await this.getDevices();
+      return allDevices.filter(device => {
+        if (!device.capabilities) return false;
+        return device.capabilities[capability] === true;
+      });
+    } catch (error) {
+      throw new Error(`Failed to get devices by capability ${capability}: ${error}`);
+    }
+  }
+
+  // Sensor data reading
+  async getSensorValue(id: number, property: string = 'value'): Promise<any> {
+    try {
+      const device = await this.getDevice(id);
+      return device.properties[property];
+    } catch (error) {
+      throw new Error(`Failed to get sensor value for device ${id}: ${error}`);
+    }
+  }
+
+  // Batch operations
+  async batchControl(operations: Array<{deviceId: number, action: string, args?: any[]}>): Promise<void> {
+    try {
+      const promises = operations.map(op => 
+        this.controlDevice(op.deviceId, op.action, op.args || [])
+      );
+      await Promise.all(promises);
+    } catch (error) {
+      throw new Error(`Failed to execute batch operations: ${error}`);
     }
   }
 
