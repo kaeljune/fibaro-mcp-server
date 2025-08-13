@@ -1,145 +1,155 @@
 # Fibaro HC3 MCP Server
 
-MCP Server để điều khiển Fibaro Home Center 3 thông qua Claude.
+> **⚠️ DEMO VERSION DISCLAIMER**  
+> This is a **demonstration/educational version** of the Fibaro HC3 MCP Server. It is **NOT a commercial product** and is provided as-is for learning and testing purposes only. Use at your own risk.
 
-## Tính năng
+An MCP (Model Context Protocol) Server for controlling Fibaro Home Center 3 through Claude AI.
 
-- **Tự động kết nối** với Fibaro HC3 khi khởi động (cấu hình một lần)
-- Lấy thông tin devices, scenes, và rooms
-- Điều khiển devices (bật/tắt, set giá trị)
-- Chạy và dừng scenes
-- Tích hợp hoàn toàn với Claude để điều khiển bằng ngôn ngữ tự nhiên
+## Features
 
-## Cài đặt
+- **Auto-connect** to Fibaro HC3 on startup (one-time configuration)
+- Retrieve information about devices, scenes, and rooms
+- Control devices (turn on/off, set values, brightness, colors)
+- Run and stop scenes
+- Full Claude AI integration for natural language control
+- Support for RGB lights with color name mapping
+- HTTP/HTTPS protocol support
 
-1. Clone hoặc tải project này
-2. Cài đặt dependencies:
+## Installation
+
+1. Clone or download this project
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-3. Build project:
+3. Build the project:
 
 ```bash
 npm run build
 ```
 
-4. **Chạy script cài đặt tự động:**
+4. **Run the automatic installation script:**
 
 ```bash
 ./install-claude.sh
 ```
 
-Script này sẽ:
-- Hỏi thông tin kết nối Fibaro HC3 (IP, username, password)
-- Test kết nối để đảm bảo thông tin đúng
-- Tự động cấu hình Claude Desktop
-- Lưu thông tin đăng nhập an toàn trong cấu hình MCP
+The script will:
+- Ask for Fibaro HC3 connection details (IP, username, password)
+- Test the connection to ensure credentials are correct
+- Automatically configure Claude Desktop
+- Securely save login credentials in MCP configuration
 
-## Sử dụng
+## Usage
 
-Sau khi cài đặt, **không cần kết nối thủ công** nữa. MCP server sẽ tự động kết nối tới Fibaro HC3 khi Claude khởi động.
+After installation, **no manual connection required**. The MCP server will automatically connect to Fibaro HC3 when Claude starts.
 
-### 1. Xem danh sách devices
-
-```
-Hiển thị tất cả devices
-```
-
-### 2. Điều khiển đèn
+### 1. View Device List
 
 ```
-Tắt đèn số 3
+Show all devices
 ```
 
+### 2. Control Lights
+
 ```
-Bật đèn phòng khách
+Turn off light number 3
 ```
 
 ```
-Chỉnh độ sáng đèn số 5 về 50%
-```
-
-### 3. Điều khiển đèn RGB
-
-```
-Chuyển đèn RGB số 10 sang màu đỏ
+Turn on living room light
 ```
 
 ```
-Set đèn RGB số 10 thành màu tím (255,0,255,0)
+Set light number 5 brightness to 50%
 ```
 
-### 4. Chạy scenes
+### 3. Control RGB Lights
 
 ```
-Chạy scene "Good Night"
+Change RGB light number 10 to red
 ```
 
-## Các lệnh có sẵn
+```
+Set RGB light number 10 to purple (255,0,255,0)
+```
 
-### Thông tin
-- `fibaro_get_devices`: Lấy danh sách tất cả devices
-- `fibaro_get_device`: Lấy thông tin chi tiết device theo ID
-- `fibaro_get_scenes`: Lấy danh sách tất cả scenes
-- `fibaro_get_scene`: Lấy thông tin chi tiết scene theo ID
-- `fibaro_get_rooms`: Lấy danh sách tất cả rooms
+### 4. Run Scenes
 
-### Điều khiển
-- `fibaro_turn_on_device`: Bật device theo ID
-- `fibaro_turn_off_device`: Tắt device theo ID
-- `fibaro_set_device_value`: Set giá trị property cho device
-- `fibaro_set_brightness`: Set độ sáng cho đèn/dimmer (0-100%)
-- `fibaro_set_color`: Set màu RGB cho đèn RGB (R,G,B,W: 0-255)
-- `fibaro_run_scene`: Chạy scene theo ID
-- `fibaro_stop_scene`: Dừng scene theo ID
+```
+Run scene "Good Night"
+```
 
-## Ví dụ tích hợp
+## Available Commands
 
-Sau khi cấu hình xong, bạn có thể nói chuyện với Claude như:
+### Information
+- `fibaro_get_devices`: Get list of all devices
+- `fibaro_get_device`: Get detailed device information by ID
+- `fibaro_get_scenes`: Get list of all scenes
+- `fibaro_get_scene`: Get detailed scene information by ID
+- `fibaro_get_rooms`: Get list of all rooms
 
-- "Tắt tất cả đèn trong nhà"
-- "Bật đèn phòng ngủ"
-- "Chạy scene good morning"
-- "Hiển thị trạng thái tất cả sensors"
-- "Set độ sáng đèn phòng khách là 50%"
-- "Chuyển đèn RGB phòng khách sang màu xanh lá"
-- "Đặt đèn RGB số 5 thành màu tím nhạt"
+### Control
+- `fibaro_turn_on_device`: Turn on device by ID
+- `fibaro_turn_off_device`: Turn off device by ID
+- `fibaro_set_device_value`: Set property value for device
+- `fibaro_set_brightness`: Set brightness for lights/dimmers (0-100%)
+- `fibaro_set_color`: Set RGB color for RGB lights (R,G,B,W: 0-255)
+- `fibaro_control_rgb_light`: Complete RGB light control (on/off + color + brightness)
+- `fibaro_run_scene`: Run scene by ID
+- `fibaro_stop_scene`: Stop scene by ID
 
-Claude sẽ tự động:
-1. Kết nối tới Fibaro HC3 (nếu chưa kết nối)
-2. Tìm devices/scenes phù hợp
-3. Thực hiện lệnh điều khiển
-4. Báo cáo kết quả
+## Integration Examples
 
-## Bảo mật
+After configuration, you can talk to Claude like:
 
-- Server này chỉ kết nối local tới Fibaro HC3
-- Thông tin đăng nhập chỉ được lưu trong phiên làm việc
-- Sử dụng HTTPS với self-signed certificate được chấp nhận
-- Không lưu trữ thông tin nhạy cảm
+- "Turn off all lights in the house"
+- "Turn on bedroom light"
+- "Run good morning scene"
+- "Show status of all sensors"
+- "Set living room light brightness to 50%"
+- "Change living room RGB light to green"
+- "Set RGB light number 5 to light purple"
+
+Claude will automatically:
+1. Connect to Fibaro HC3 (if not already connected)
+2. Find matching devices/scenes
+3. Execute control commands
+4. Report results
+
+## Security
+
+- This server only connects locally to Fibaro HC3
+- Login credentials are stored securely in MCP configuration
+- Supports both HTTP and HTTPS with self-signed certificate acceptance
+- No sensitive information is stored in logs
 
 ## Troubleshooting
 
-### Không kết nối được tới Fibaro HC3
+### Cannot connect to Fibaro HC3
 
-- Chạy lại script cài đặt: `./install-claude.sh`
-- Kiểm tra IP address và port (mặc định: 443)
-- Đảm bảo username/password đúng
-- Kiểm tra firewall và network connectivity
-- Thử truy cập web interface của HC3 từ browser
+- Re-run the installation script: `./install-claude.sh`
+- Check IP address and port (default HTTP: 80, HTTPS: 443)
+- Ensure username/password are correct
+- Check firewall and network connectivity
+- Try accessing HC3 web interface from browser
 
-### MCP Server không hoạt động
+### MCP Server not working
 
-- Kiểm tra đường dẫn trong cấu hình Claude
-- Đảm bảo project đã được build (`npm run build`)
-- Restart Claude Desktop sau khi thay đổi cấu hình
-- Kiểm tra log của Claude Desktop để xem lỗi chi tiết
+- Check the path in Claude configuration
+- Ensure project has been built (`npm run build`)
+- Restart Claude Desktop after configuration changes
+- Check Claude Desktop logs for detailed error messages
 
-### Thay đổi thông tin kết nối Fibaro HC3
+### Changing Fibaro HC3 connection information
 
-Để thay đổi IP, username hoặc password:
-1. Chạy lại script cài đặt: `./install-claude.sh`
-2. Nhập thông tin mới
+To change IP, username, or password:
+1. Re-run the installation script: `./install-claude.sh`
+2. Enter new information
 3. Restart Claude Desktop
+
+## License
+
+This is a demo/educational project. Not for commercial use.
